@@ -14,9 +14,11 @@ from datetime import date, timedelta, datetime
 version = "0.5"
 
 credsfile = "credentials.yaml"
+args = []
 creds = []
 
 def parse_arguments():
+    global args
     parser = argparse.ArgumentParser("remoteget")
     parser.add_argument("c", help="path to file containing credentials", type=str)
     parser.add_argument("d", help="path to file containing download locations", type=str)
@@ -60,11 +62,12 @@ def calc_doy():
 
 print("--- Starting remoteget version " + version + " ---")
 parse_arguments()
+print(args)
 print("GPS week: " + str(calc_gps_week()))
 print("Day of year: " + str(calc_doy()))
 load_credentials("credentials.yaml")
 print(creds)
 
-with open("data.yaml") as f:
+with open("downloadlist.yaml") as f:
     data = yaml.load(f, Loader=yaml.FullLoader)
     print(data)
