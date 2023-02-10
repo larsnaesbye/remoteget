@@ -3,12 +3,13 @@
 # Can evaluate day of year and gpsweek for macro resolution
 # LANCH, 2023
 
-import yaml
-import requests
 import argparse
+import requests
 import os
+import yaml
 
 from datetime import date, timedelta, datetime
+from ftplib import FTP
 from urllib.parse import urlparse
 
 # Constants
@@ -18,31 +19,47 @@ credsfile = "credentials.yaml"
 args = []
 creds = []
 
+
 def parse_arguments():
     global args
     parser = argparse.ArgumentParser("remoteget")
     parser.add_argument("c", help="path to file containing credentials", type=str)
-    parser.add_argument("d", help="path to file containing download locations", type=str)
+    parser.add_argument(
+        "d", help="path to file containing download locations", type=str
+    )
     args = parser.parse_args()
-    return 0 # placeholder
+    return 0  # placeholder
 
 
 def download_http(url):
+    """Handles HTTP and HTTPS downloads"""
     r = requests.get(url, allow_redirects=True)
     a = urlparse(url)
-    open(os.path.basename(a.path), 'wb').write(r.content) # 
+    open(os.path.basename(a.path), "wb").write(r.content)
+
+
+def download_ftp_anon(url):
+    """Handles anonymous FTP downloads"""
+    ftp = FTP(url)  # connect to host, default port
+    ftp.login()  # user anonymous, passwd anonymous@
+    ftp.cwd("debian")  # change into "debian" directory
+    with open("README", "wb") as fp:
+        ftp.retrbinary("RETR README", fp.write)
+    ftp.quit()
+
+
+def download_ftp_creds(url):
+    """Handles FTP downloads with credentials"""
     return 0  # placeholder
 
 
-def download_ftp(url):
-    return 0  # placeholder
-
-
-def download_ftps(url):
+def download_ftps_creds(url):
+    """Handles FTPS downloads with credentials"""
     return 0  # placeholder
 
 
 def download_sftp(url):
+    """Handles SFTP downloads with credentials"""
     return 0  # placeholder
 
 
@@ -55,9 +72,9 @@ def load_credentials(credsfile):
 def calc_gps_week():
     epoch = date(1980, 1, 6)
     today = date.today()
-    epochMonday = epoch - timedelta(epoch.weekday())
-    todayMonday = today - timedelta(today.weekday())
-    return (todayMonday - epochMonday).days / 7
+    epoch_monday = epoch - timedelta(epoch.weekday())
+    today_monday = today - timedelta(today.weekday())
+    return (today_monday - epoch_monday).days / 7
 
 
 def calc_doy():
@@ -66,11 +83,10 @@ def calc_doy():
 
 print("--- Starting remoteget version " + version + " ---")
 parse_arguments()
-print(args)
+
 print("GPS week: " + str(calc_gps_week()))
 print("Day of year: " + str(calc_doy()))
-load_credentials("credentials.yaml")
-print(creds)
+load_credentials(credsfile)
 
 with open("downloadlist.yaml") as f:
     data = yaml.load(f, Loader=yaml.FullLoader)
