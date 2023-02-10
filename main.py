@@ -1,14 +1,15 @@
 # Download a series of files for AutoBernese
 # Parameters: credentials file, downloads file
-# Can evaluate day of year and gpsweek
+# Can evaluate day of year and gpsweek for macro resolution
 # LANCH, 2023
 
 import yaml
 import requests
 import argparse
+import os
 
 from datetime import date, timedelta, datetime
-
+from urllib.parse import urlparse
 
 # Constants
 version = "0.5"
@@ -26,19 +27,22 @@ def parse_arguments():
     return 0 # placeholder
 
 
-def download_http():
+def download_http(url):
+    r = requests.get(url, allow_redirects=True)
+    a = urlparse(url)
+    open(os.path.basename(a.path), 'wb').write(r.content) # 
     return 0  # placeholder
 
 
-def download_ftp():
+def download_ftp(url):
     return 0  # placeholder
 
 
-def download_ftps():
+def download_ftps(url):
     return 0  # placeholder
 
 
-def download_sftp():
+def download_sftp(url):
     return 0  # placeholder
 
 
