@@ -15,10 +15,10 @@ from urllib.parse import urlparse
 # Constants and globals
 version = "0.5"
 gps_epoch = date(1980, 1, 6) # GPS week 0
-credsfile = "credentials.yaml"
-args = []
-creds = []
-downloadlist = []
+credsfile = "credentials-example.yaml"
+args = None
+creds = None
+downloadlist = None
 
 def parse_arguments():
     global args
@@ -28,7 +28,6 @@ def parse_arguments():
         "d", help="path to file containing download locations", type=str
     )
     args = parser.parse_args()
-    return 0  # placeholder
 
 
 def download_http(url):
@@ -78,11 +77,12 @@ def calc_gps_week():
 
 
 def calc_year_yyyy():
-    return 0  # placeholder
-
+    today = datetime.today()
+    return today.strftime("%Y")
 
 def calc_year_yy():
-    return 0  # placeholder
+    today = datetime.today()
+    return today.strftime("%y")
 
 
 def calc_doy():
@@ -92,11 +92,13 @@ def calc_doy():
 print(datetime.fromtimestamp(datetime.now().timestamp()) ," Starting remoteget " + version)
 parse_arguments()
 
-print("GPS week: " + str(calc_gps_week()))
 print("Day of year: " + str(calc_doy()))
+print("Year: " + str(calc_year_yyyy()) + " " + str(calc_year_yy()))
+
+print("GPS week: " + str(calc_gps_week()))
 load_credentials(credsfile)
 
-with open("downloadlist.yaml") as f:
+with open("downloadlist-example.yaml") as f:
     downloadlist = yaml.load(f, Loader=yaml.FullLoader)
     print(downloadlist)
 print(datetime.fromtimestamp(datetime.now().timestamp()) ," Ending remoteget " + version)
