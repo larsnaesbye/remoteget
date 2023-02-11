@@ -1,8 +1,9 @@
+credentials: credentials-example.yaml
 downloads:
   NKG:
     method: http
     url: subdomain.domain.tld
-    path: 
+    path: /pub/$GPSWEEK$/$DOY$.txt
     creds: user1
   AIUB:
     method: ftp

@@ -18,6 +18,7 @@ gps_epoch = date(1980, 1, 6) # GPS week 0
 credsfile = "credentials.yaml"
 args = []
 creds = []
+downloadlist = []
 
 def parse_arguments():
     global args
@@ -76,11 +77,19 @@ def calc_gps_week():
     return (today_monday - epoch_monday).days / 7
 
 
+def calc_year_yyyy():
+    return 0  # placeholder
+
+
+def calc_year_yy():
+    return 0  # placeholder
+
+
 def calc_doy():
     return datetime.now().timetuple().tm_yday
 
 
-print("--- Starting remoteget version " + version + " ---")
+print(datetime.fromtimestamp(datetime.now().timestamp()) ," Starting remoteget " + version)
 parse_arguments()
 
 print("GPS week: " + str(calc_gps_week()))
@@ -88,5 +97,7 @@ print("Day of year: " + str(calc_doy()))
 load_credentials(credsfile)
 
 with open("downloadlist.yaml") as f:
-    data = yaml.load(f, Loader=yaml.FullLoader)
-    print(data)
+    downloadlist = yaml.load(f, Loader=yaml.FullLoader)
+    print(downloadlist)
+print(datetime.fromtimestamp(datetime.now().timestamp()) ," Ending remoteget " + version)
+
