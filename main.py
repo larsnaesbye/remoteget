@@ -12,13 +12,12 @@ from datetime import date, timedelta, datetime
 from ftplib import FTP
 from urllib.parse import urlparse
 
-# Constants
+# Constants and globals
 version = "0.5"
-
+gps_epoch = date(1980, 1, 6) # GPS week 0
 credsfile = "credentials.yaml"
 args = []
 creds = []
-
 
 def parse_arguments():
     global args
@@ -40,8 +39,9 @@ def download_http(url):
 
 def download_ftp_anon(url):
     """Handles anonymous FTP downloads"""
+    a = urlparse(url)
     ftp = FTP(url)  # connect to host, default port
-    ftp.login()  # user anonymous, passwd anonymous@
+    ftp.login()  # user anonymous, password anonymous
     ftp.cwd("debian")  # change into "debian" directory
     with open("README", "wb") as fp:
         ftp.retrbinary("RETR README", fp.write)
@@ -70,9 +70,8 @@ def load_credentials(credsfile):
 
 
 def calc_gps_week():
-    epoch = date(1980, 1, 6)
     today = date.today()
-    epoch_monday = epoch - timedelta(epoch.weekday())
+    epoch_monday = gps_epoch - timedelta(gps_epoch.weekday())
     today_monday = today - timedelta(today.weekday())
     return (today_monday - epoch_monday).days / 7
 

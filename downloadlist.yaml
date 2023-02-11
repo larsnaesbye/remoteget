@@ -1,5 +1,21 @@
 downloads:
-  - Eset
-  - Slovnaft
-  - Duslo Sala
-  - Matador Puchov
+  NKG:
+    method: http
+    url: subdomain.domain.tld
+    path: 
+    creds: user1
+  AIUB:
+    method: ftp
+    url: subdomain.domain.tld
+    path: 
+    creds: user2
+  BKG:
+    method: ftps
+    url: subdomain.domain.tld
+    path: 
+    creds: user3
+  NASA:
+    method: sftp
+    url: subdomain.domain.tld
+    path: 
+    creds: user4
