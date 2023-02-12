@@ -1,7 +1,7 @@
 # Download a series of files for AutoBernese
 # Parameters: credentials file, downloads file
 # Can evaluate day of year and gpsweek for macro resolution
-# LANCH, 2023
+# Lars Næsbye Christensen, 2023
 
 import argparse
 import requests
@@ -14,18 +14,29 @@ from urllib.parse import urlparse
 
 # Constants and globals
 version = "0.5"
-gps_epoch = date(1980, 1, 6) # GPS week 0
-credsfile = "credentials-example.yaml"
+gps_epoch = date(1980, 1, 6)  # GPS week 0
+#credsfile = "credentials-example.yaml"
 args = None
 creds = None
 downloadlist = None
 
+
 def parse_arguments():
     global args
     parser = argparse.ArgumentParser("remoteget")
-    parser.add_argument("c", help="path to file containing credentials", type=str)
     parser.add_argument(
-        "d", help="path to file containing download locations", type=str
+        "-c",
+        "--credentials",
+        help="path to file containing credentials",
+        action="store",
+        type=str,
+    )
+    parser.add_argument(
+        "-d",
+        "--downloadpath",
+        help="path to file containing download locations",
+        action="store",
+        type=str,
     )
     args = parser.parse_args()
 
@@ -80,6 +91,7 @@ def calc_year_yyyy():
     today = datetime.today()
     return today.strftime("%Y")
 
+
 def calc_year_yy():
     today = datetime.today()
     return today.strftime("%y")
@@ -89,17 +101,22 @@ def calc_doy():
     return datetime.now().timetuple().tm_yday
 
 
-print(datetime.fromtimestamp(datetime.now().timestamp()) ," Starting remoteget " + version)
+print(
+    datetime.fromtimestamp(datetime.now().timestamp()), " Starting remoteget " + version
+)
 parse_arguments()
-
+# print(args)
 print("Day of year: " + str(calc_doy()))
 print("Year: " + str(calc_year_yyyy()) + " " + str(calc_year_yy()))
-
 print("GPS week: " + str(calc_gps_week()))
-load_credentials(credsfile)
 
-with open("downloadlist-example.yaml") as f:
+with open(args.downloadpath) as f:
     downloadlist = yaml.load(f, Loader=yaml.FullLoader)
     print(downloadlist)
-print(datetime.fromtimestamp(datetime.now().timestamp()) ," Ending remoteget " + version)
 
+
+load_credentials(credsfile)
+
+print(
+    datetime.fromtimestamp(datetime.now().timestamp()), " Ending remoteget " + version
+)

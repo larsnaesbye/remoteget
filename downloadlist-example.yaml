@@ -1,21 +1,21 @@
 credentials: credentials-example.yaml
 downloads:
-  NKG:
+  SERVER1:
     method: http
     url: subdomain.domain.tld
     path: /pub/$GPSWEEK$/$DOY$.txt
     creds: user1
-  AIUB:
+  SERVER2:
     method: ftp
     url: subdomain.domain.tld
     path: 
     creds: user2
-  BKG:
+  SERVER3:
     method: ftps
     url: subdomain.domain.tld
     path: 
     creds: user3
-  NASA:
+  SERVER4:
     method: sftp
     url: subdomain.domain.tld
     path: 

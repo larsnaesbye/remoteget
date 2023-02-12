@@ -1,4 +1,4 @@
-name: fileget
+name: remoteget
 channels:
   - conda-forge
   - defaults
