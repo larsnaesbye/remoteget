@@ -42,21 +42,23 @@ def download_http(url):
 
 def download_ftp_anon(url):
     """Handles anonymous FTP downloads."""
+    print(url)
     a = urlparse(url)
-    ftp = FTP(url)  # connect to host, default port
+    print(a)
+    ftp = FTP(a.netloc)  # connect to host, default port
     ftp.login()  # user anonymous, password anonymous
-    ftp.cwd("debian")  # change into "debian" directory
-    with open("README", "wb") as fp:
-        ftp.retrbinary("RETR README", fp.write)
+    ftp.cwd(os.path.dirname(a.path))  # change into the specified directory
+    with open(os.path.basename(a.path), "wb") as fp:
+        ftp.retrbinary(os.path.basename(a.path), fp.write)
     ftp.quit()
 
 
-def download_ftp_creds(url):
-    """Handles FTP downloads with credentials. Should not be used."""
+def download_ftp_creds(url, user, password):
+    """Handles FTP downloads with user/password. Should actually not be used."""
     return 0  # placeholder
 
 
-def download_ftps_creds(url):
+def download_ftps_creds(url, user, password):
     """Handles FTPS downloads with credentials."""
     return 0  # placeholder
 
@@ -114,19 +116,19 @@ def resolve_macros(macrostring):
 print(
     datetime.fromtimestamp(datetime.now().timestamp()), " Starting remoteget " + version
 )
-parse_arguments()  # only one argument for now, d
-print("Day of year: " + str(calc_doy()))
-print("Year: " + str(calc_year_yyyy()) + " " + str(calc_year_yy()))
-print("GPS week: " + str(calc_gps_week()))
+parse_arguments()  # only one argument for now, d for download list
+# print("Day of year: " + str(calc_doy()))
+# print("Year: " + str(calc_year_yyyy()) + " " + str(calc_year_yy()))
+# print("GPS week: " + str(calc_gps_week()))
 
 # We load the YAML file specified under credentials to get access
 with open(args.downloadpath) as f:
     downloadlist = yaml.load(f, Loader=yaml.FullLoader)
 
-
 load_credentials(downloadlist["credentials"])
 
-print(resolve_macros("/pub/$GPSWEEK$/$DOY$.txt"))
+download_ftp_anon("ftp://ftp.cs.brown.edu/u/ag/giotto3d/btree-print.ps.gz") # this works in ordinary FTP clients
+
 print(
     datetime.fromtimestamp(datetime.now().timestamp()), " Ending remoteget " + version
 )
