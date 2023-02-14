@@ -1,11 +1,11 @@
 # Download a series of files for AutoBernese
-# Parameters: -d, downloads file (YAML). See example.
+# One parameter: -d, downloads file (YAML). See example.
 # Can evaluate day of year and gpsweek for macro resolution
 # Lars Næsbye Christensen, 2023
 
 import argparse
 import os
-import paramiko
+import fabric
 import requests
 import yaml
 
@@ -47,7 +47,7 @@ def download_ftp_anon(url):
     ftp.login()  # user anonymous, password anonymous
     ftp.cwd(os.path.dirname(a.path))  # change into the specified directory
     with open(os.path.basename(a.path), "wb") as fp:
-        ftp.retrbinary('RETR %s' % os.path.basename(a.path), fp.write)
+        ftp.retrbinary("RETR %s" % os.path.basename(a.path), fp.write)
     ftp.quit()
 
 
@@ -55,20 +55,21 @@ def download_ftp_creds(url, usr, pword):
     """Handles FTP (insecure) downloads with user/password. Should actually not be used."""
     a = urlparse(url)
     ftp = FTP(a.netloc)  # connect to host, default port
-    ftp.login(user=usr, passwd=pword)  # user anonymous, password anonymous
+    ftp.login(user=usr, passwd=pword)
     ftp.cwd(os.path.dirname(a.path))  # change into the specified directory
     with open(os.path.basename(a.path), "wb") as fp:
-        ftp.retrbinary('RETR %s' % os.path.basename(a.path), fp.write)
+        ftp.retrbinary("RETR %s" % os.path.basename(a.path), fp.write)
     ftp.quit()
 
 
 def download_ftps_creds(url, user, password):
-    """Handles FTPS downloads with credentials."""
+    """Handles FTPS downloads with user/password credentials."""
     return 0  # placeholder
 
 
 def download_sftp(url):
-    """Handles SFTP downloads with credentials. Uses paramiko."""
+    """Handles SFTP downloads with credentials. Uses fabric."""
+    # https://docs.fabfile.org/en/stable/getting-started.html#transfer-files
     return 0  # placeholder
 
 
@@ -116,14 +117,11 @@ def resolve_macros(macrostring):
     return resultstring
 
 
-# --- Main program
+# --- Main program ---
 print(
     datetime.fromtimestamp(datetime.now().timestamp()), " Starting remoteget " + version
 )
 parse_arguments()  # only one argument for now, d for download list
-# print("Day of year: " + str(calc_doy()))
-# print("Year: " + str(calc_year_yyyy()) + " " + str(calc_year_yy()))
-# print("GPS week: " + str(calc_gps_week()))
 
 # We load the YAML file specified under credentials to get access
 with open(args.downloadpath) as f:
@@ -131,8 +129,10 @@ with open(args.downloadpath) as f:
 
 load_credentials(downloadlist["credentials"])
 
-#download_ftp_anon("ftp://ftp.cs.brown.edu/u/ag/giotto3d/btree-print.ps.gz") # this works in ordinary FTP clients
-download_ftp_creds("ftp://ftp.cs.brown.edu/u/ag/giotto3d/btree-print.ps.gz",'anonymous','anonymous') # this works in ordinary FTP clients
+# download_ftp_anon("ftp://ftp.cs.brown.edu/u/ag/giotto3d/btree-print.ps.gz") # this works in ordinary FTP clients
+download_ftp_creds(
+    "ftp://ftp.cs.brown.edu/u/ag/giotto3d/btree-print.ps.gz", "anonymous", "anonymous"
+)
 
 print(
     datetime.fromtimestamp(datetime.now().timestamp()), " Ending remoteget " + version
