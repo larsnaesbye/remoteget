@@ -42,9 +42,7 @@ def download_http(url):
 
 def download_ftp_anon(url):
     """Handles anonymous FTP downloads."""
-    print(url)
     a = urlparse(url)
-    print(a)
     ftp = FTP(a.netloc)  # connect to host, default port
     ftp.login()  # user anonymous, password anonymous
     ftp.cwd(os.path.dirname(a.path))  # change into the specified directory
@@ -53,9 +51,15 @@ def download_ftp_anon(url):
     ftp.quit()
 
 
-def download_ftp_creds(url, user, password):
-    """Handles FTP downloads with user/password. Should actually not be used."""
-    return 0  # placeholder
+def download_ftp_creds(url, usr, pword):
+    """Handles FTP (insecure) downloads with user/password. Should actually not be used."""
+    a = urlparse(url)
+    ftp = FTP(a.netloc)  # connect to host, default port
+    ftp.login(user=usr, passwd=pword)  # user anonymous, password anonymous
+    ftp.cwd(os.path.dirname(a.path))  # change into the specified directory
+    with open(os.path.basename(a.path), "wb") as fp:
+        ftp.retrbinary('RETR %s' % os.path.basename(a.path), fp.write)
+    ftp.quit()
 
 
 def download_ftps_creds(url, user, password):
@@ -127,7 +131,8 @@ with open(args.downloadpath) as f:
 
 load_credentials(downloadlist["credentials"])
 
-download_ftp_anon("ftp://ftp.cs.brown.edu/u/ag/giotto3d/btree-print.ps.gz") # this works in ordinary FTP clients
+#download_ftp_anon("ftp://ftp.cs.brown.edu/u/ag/giotto3d/btree-print.ps.gz") # this works in ordinary FTP clients
+download_ftp_creds("ftp://ftp.cs.brown.edu/u/ag/giotto3d/btree-print.ps.gz",'anonymous','anonymous') # this works in ordinary FTP clients
 
 print(
     datetime.fromtimestamp(datetime.now().timestamp()), " Ending remoteget " + version
