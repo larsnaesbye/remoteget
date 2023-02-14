@@ -49,7 +49,7 @@ def download_ftp_anon(url):
     ftp.login()  # user anonymous, password anonymous
     ftp.cwd(os.path.dirname(a.path))  # change into the specified directory
     with open(os.path.basename(a.path), "wb") as fp:
-        ftp.retrbinary(os.path.basename(a.path), fp.write)
+        ftp.retrbinary('RETR %s' % os.path.basename(a.path), fp.write)
     ftp.quit()
 
 
