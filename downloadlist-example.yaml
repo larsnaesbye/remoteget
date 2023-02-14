@@ -5,18 +5,22 @@ downloads:
     url: subdomain.domain.tld
     path: /pub/$GPSWEEK$/$DOY$.txt
     creds: user1
+    dest:
   SERVER2:
     method: ftp
     url: subdomain.domain.tld
     path: 
     creds: user2
+    dest:
   SERVER3:
     method: ftps
     url: subdomain.domain.tld
     path: 
     creds: user3
+    dest:
   SERVER4:
     method: sftp
     url: subdomain.domain.tld
     path: 
     creds: user4
+    dest:
