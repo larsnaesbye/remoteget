@@ -1,4 +1,4 @@
-# Download a series of files for AutoBernese
+# Download a series of files
 # One parameter: -d, downloads file (YAML). See example.
 # Can evaluate day of year and gpsweek for macro resolution
 # Lars Næsbye Christensen, 2023
@@ -76,7 +76,7 @@ def download_ftps_creds(url, usr, pword):
 def download_sftp(url):
     """Handles SFTP downloads with credentials. Uses fabric."""
     with Connection(url) as c:
-        c.get('file')
+        c.get("file")
 
 
 def load_credentials(credsfile):
@@ -132,7 +132,7 @@ print(
     datetime.fromtimestamp(datetime.now().timestamp()), " Starting remoteget " + version
 )
 
-parse_arguments()  # parse arguments. Only one for now, d for download list
+parse_arguments()  # parse arguments. Only one for now: d for download list
 
 # Using the download list argument, we load the YAML file specifying files to download and how
 with open(args.downloadpath) as f:
@@ -146,7 +146,9 @@ for location in downloadlist["downloads"]:
     dest = downloadlist["downloads"][location]["dest"]
     # should be replaced with Python 3.10 match statement instead
     if method == "http":
-        download_http(url)
+        download_http(method + "://" + url)
+    if method == "https":
+        download_http(method + "://" + url)
     elif method == "ftp":
         download_ftp_anon(url)
     elif method == "ftps":
@@ -156,11 +158,6 @@ for location in downloadlist["downloads"]:
 
 
 load_credentials(downloadlist["credentials"])
-
-# download_ftp_anon("ftp://ftp.cs.brown.edu/u/ag/giotto3d/btree-print.ps.gz") # this works in ordinary FTP clients
-# download_ftp_creds(
-#   "ftp://ftp.cs.brown.edu/u/ag/giotto3d/btree-print.ps.gz", "anonymous", "anonymous"
-# )
 
 print(
     datetime.fromtimestamp(datetime.now().timestamp()), " Ending remoteget " + version
