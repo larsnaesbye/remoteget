@@ -1,9 +1,9 @@
 # remoteget
 
-Downloads a series of GNSS-related files using different protocols - http, https, ftp, ftps, sftp.
+__remoteget__ downloads a series of files using different protocols - http, https, ftp, ftps, sftp.
 
-Uses macros for Day of Year, Year and GPS week.
+Developed for the AutoBernese system at SDFI to collect GNSS-related data, but may be useful for others who want to download parameterized file collections from heterogenous sources.
 
-Developed as PoC for the AutoBernese system at SDFI, but may be useful for others.
+Uses macros for Day of Year, Year and GPS week. System environment variables (such as HOME) can also be used.
 
 Input must be a YAML file (see 'downloadlist-example.yaml') that specifies credentials and paths to files.
