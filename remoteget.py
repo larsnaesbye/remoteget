@@ -136,14 +136,12 @@ for location in downloadlist["downloads"]:
     dest = downloadlist["downloads"][location]["dest"]
     print(downloadlist["downloads"][location])
     # TODO: should be replaced with Python 3.10+ match statement instead
-    if method == "http":
-        download_http(method + "://" + url + path)
-    if method == "https":
+    if method == "http" or method == "https" :
         download_http(method + "://" + url + path)
     elif method == "ftp":
         download_ftp_creds(method + "://" + url + path, usr=user, pword=password)
     elif method == "ftps":
-        download_ftps_creds(method + "://" + url + path, usr=creds, pword=creds)
+        download_ftps_creds(method + "://" + url + path, usr=user, pword=password)
     elif method == "sftp":
         download_sftp(url)
 
