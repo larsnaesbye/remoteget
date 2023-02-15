@@ -62,10 +62,14 @@ def download_ftps_creds(url, usr, pword):
     ftps.quit()
 
 
-def download_sftp(url):
+def download_sftp(url, usr, pword):
     """Handles SFTP downloads with credentials. Uses fabric."""
-    with Connection(url) as c:
-        c.get("file")
+    a = urlparse(url)
+    print(a)
+    with Connection(
+        a.netloc, port=22, user=usr, connect_kwargs={"password": pword}
+    ) as c:
+        c.get(os.path.basename(a.path))
 
 
 def load_credentials(credsfile):
@@ -136,14 +140,14 @@ for location in downloadlist["downloads"]:
     dest = downloadlist["downloads"][location]["dest"]
     print(downloadlist["downloads"][location])
     # TODO: should be replaced with Python 3.10+ match statement instead
-    if method == "http" or method == "https" :
+    if method == "http" or method == "https":
         download_http(method + "://" + url + path)
     elif method == "ftp":
         download_ftp_creds(method + "://" + url + path, usr=user, pword=password)
     elif method == "ftps":
         download_ftps_creds(method + "://" + url + path, usr=user, pword=password)
     elif method == "sftp":
-        download_sftp(url)
+        download_sftp(method + "://" + url + path, usr=user, pword=password)
 
 
 load_credentials(downloadlist["credentials"])
