@@ -10,7 +10,9 @@ import requests
 import yaml
 
 from datetime import date, timedelta, datetime
+from fabric import Connection
 from ftplib import FTP, FTP_TLS
+
 from urllib.parse import urlparse
 
 # Constants and globals
@@ -62,15 +64,21 @@ def download_ftp_creds(url, usr, pword):
     ftp.quit()
 
 
-def download_ftps_creds(url, user, password):
+def download_ftps_creds(url, usr, pword):
     """Handles FTPS downloads with user/password credentials."""
-    return 0  # placeholder
+    a = urlparse(url)
+    ftps = FTP_TLS(a.netloc)  # connect to host, default port
+    ftps.login(user=usr, passwd=pword)
+    ftps.cwd(os.path.dirname(a.path))  # change into the specified directory
+    with open(os.path.basename(a.path), "wb") as fp:
+        ftps.retrbinary("RETR %s" % os.path.basename(a.path), fp.write)
+    ftps.quit()
 
 
 def download_sftp(url):
     """Handles SFTP downloads with credentials. Uses fabric."""
-    # https://docs.fabfile.org/en/stable/getting-started.html#transfer-files
-    return 0  # placeholder
+    with Connection(url) as c:
+        c.get('file')
 
 
 def load_credentials(credsfile):
@@ -101,6 +109,7 @@ def calc_doy():
     return datetime.now().timetuple().tm_yday
 
 
+# Some useful macros
 macros = {
     "$DOY$": str(calc_doy()),
     "$YYYY$": str(calc_year_yyyy()),
@@ -134,9 +143,9 @@ with open(args.downloadpath) as f:
 load_credentials(downloadlist["credentials"])
 
 # download_ftp_anon("ftp://ftp.cs.brown.edu/u/ag/giotto3d/btree-print.ps.gz") # this works in ordinary FTP clients
-download_ftp_creds(
-    "ftp://ftp.cs.brown.edu/u/ag/giotto3d/btree-print.ps.gz", "anonymous", "anonymous"
-)
+# download_ftp_creds(
+#   "ftp://ftp.cs.brown.edu/u/ag/giotto3d/btree-print.ps.gz", "anonymous", "anonymous"
+# )
 
 print(
     datetime.fromtimestamp(datetime.now().timestamp()), " Ending remoteget " + version
