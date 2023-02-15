@@ -4,8 +4,8 @@
 # Lars Næsbye Christensen, 2023
 
 import argparse
-import os
 import fabric
+import os
 import requests
 import yaml
 
@@ -52,7 +52,7 @@ def download_ftp_anon(url):
 
 
 def download_ftp_creds(url, usr, pword):
-    """Handles FTP (insecure) downloads with user/password. Should actually not be used."""
+    """Handles FTP (insecure) downloads with user/password. Should actually NOT be used."""
     a = urlparse(url)
     ftp = FTP(a.netloc)  # connect to host, default port
     ftp.login(user=usr, passwd=pword)
@@ -107,6 +107,9 @@ macros = {
     "$YY$": str(calc_year_yy()),
     "$GPSWEEK$": str(calc_gps_week()),
 }
+# Add the system environment variables to our macro collection
+for name, value in os.environ.items():
+    macros["$" + name + "$"] = value
 
 
 def resolve_macros(macrostring):
@@ -121,6 +124,7 @@ def resolve_macros(macrostring):
 print(
     datetime.fromtimestamp(datetime.now().timestamp()), " Starting remoteget " + version
 )
+
 parse_arguments()  # only one argument for now, d for download list
 
 # We load the YAML file specified under credentials to get access
