@@ -40,19 +40,8 @@ def download_http(url):
     open(os.path.basename(a.path), "wb").write(r.content)
 
 
-def download_ftp_anon(url):
-    """Handles anonymous FTP downloads."""
-    a = urlparse(url)
-    ftp = FTP(a.netloc)  # connect to host, default port
-    ftp.login()  # user anonymous, password anonymous
-    ftp.cwd(os.path.dirname(a.path))  # change into the specified directory
-    with open(os.path.basename(a.path), "wb") as fp:
-        ftp.retrbinary("RETR %s" % os.path.basename(a.path), fp.write)
-    ftp.quit()
-
-
 def download_ftp_creds(url, usr, pword):
-    """Handles FTP (insecure) downloads with user/password. Should actually NOT be used."""
+    """Handles FTP (insecure) downloads with user/password. Should actually NOT be used except with anonymous username and password."""
     a = urlparse(url)
     ftp = FTP(a.netloc)  # connect to host, default port
     ftp.login(user=usr, passwd=pword)
@@ -142,18 +131,19 @@ for location in downloadlist["downloads"]:
     method = downloadlist["downloads"][location]["method"]
     url = downloadlist["downloads"][location]["url"]
     path = downloadlist["downloads"][location]["path"]
-    creds = downloadlist["downloads"][location]["creds"]
+    user = downloadlist["downloads"][location]["user"]
+    password = downloadlist["downloads"][location]["pass"]
     dest = downloadlist["downloads"][location]["dest"]
     print(downloadlist["downloads"][location])
     # TODO: should be replaced with Python 3.10+ match statement instead
     if method == "http":
-        download_http(method + "://" + url+path)
+        download_http(method + "://" + url + path)
     if method == "https":
-        download_http(method + "://" + url+path)
+        download_http(method + "://" + url + path)
     elif method == "ftp":
-        download_ftp_anon(method + "://" + url+path)
+        download_ftp_creds(method + "://" + url + path, usr=user, pword=password)
     elif method == "ftps":
-        download_ftps_creds(url, usr=creds, pword=creds)
+        download_ftps_creds(method + "://" + url + path, usr=creds, pword=creds)
     elif method == "sftp":
         download_sftp(url)
 
