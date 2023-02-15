@@ -4,19 +4,17 @@
 # Lars Næsbye Christensen, 2023
 
 import argparse
-import fabric
 import os
-import requests
-import yaml
-
 from datetime import date, timedelta, datetime
-from fabric import Connection
 from ftplib import FTP, FTP_TLS
-
 from urllib.parse import urlparse
 
+import requests
+import yaml
+from fabric import Connection
+
 # Constants and globals
-version = "0.5"
+version = "0.9"
 args = None
 creds = None
 downloadlist = None
@@ -129,16 +127,33 @@ def resolve_macros(macrostring):
     return resultstring
 
 
-# --- Main program ---
+# --- MAIN PROGRAM  ---------------------------------
 print(
     datetime.fromtimestamp(datetime.now().timestamp()), " Starting remoteget " + version
 )
 
-parse_arguments()  # only one argument for now, d for download list
+parse_arguments()  # parse arguments. Only one for now, d for download list
 
-# We load the YAML file specified under credentials to get access
+# Using the download list argument, we load the YAML file specifying files to download and how
 with open(args.downloadpath) as f:
     downloadlist = yaml.load(f, Loader=yaml.FullLoader)
+
+for location in downloadlist["downloads"]:
+    method = downloadlist["downloads"][location]["method"]
+    url = downloadlist["downloads"][location]["url"]
+    path = downloadlist["downloads"][location]["path"]
+    creds = downloadlist["downloads"][location]["creds"]
+    dest = downloadlist["downloads"][location]["dest"]
+    # should be replaced with Python 3.10 match statement instead
+    if method == "http":
+        download_http(url)
+    elif method == "ftp":
+        download_ftp_anon(url)
+    elif method == "ftps":
+        download_ftps_creds(url, usr=creds, pword=creds)
+    elif method == "sftp":
+        download_sftp(url)
+
 
 load_credentials(downloadlist["credentials"])
 
