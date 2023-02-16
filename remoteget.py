@@ -66,10 +66,11 @@ def download_sftp(url, usr, pword):
     """Handles SFTP downloads with credentials. Uses fabric."""
     a = urlparse(url)
     print(a)
-    with Connection(
+    c = Connection(
         a.netloc, port=22, user=usr, connect_kwargs={"password": pword}
-    ) as c:
-        c.get(os.path.basename(a.path))
+    )
+    print(c)
+    c.get(os.path.basename(a.path))
 
 
 def load_credentials(credsfile):
