@@ -78,13 +78,6 @@ def download_sftp(url, usr, pword, localpath):
     c.get(os.path.basename(a.path))
     # TODO: set local path for getting
 
-
-def load_credentials(credsfile):
-    global creds
-    with open(credsfile) as c:
-        creds = yaml.load(c, Loader=yaml.FullLoader)
-
-
 def calc_gps_week():
     gps_epoch = date(1980, 1, 6)  # GPS week 0
     today = date.today()
@@ -156,8 +149,6 @@ for location in downloadlist["downloads"]:
         download_ftps_creds(method + "://" + url + path, usr=user, pword=password, localpath=dest)
     elif method == "sftp":
         download_sftp(method + "://" + url + path, usr=user, pword=password, localpath=dest)
-
-# load_credentials(downloadlist["credentials"])
 
 print(
     datetime.fromtimestamp(datetime.now().timestamp()), " Ending remoteget " + version

@@ -1,4 +1,3 @@
-credentials: credentials-example.yaml
 downloads:
   SERVER1:
     method: http
