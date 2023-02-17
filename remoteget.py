@@ -33,14 +33,14 @@ def parse_arguments():
     args = parser.parse_args()
 
 
-def download_http(url):
+def download_http(url, localpath):
     """Handles HTTP and HTTPS downloads."""
     r = requests.get(url, allow_redirects=True)
     a = urlparse(url)
     open(os.path.basename(a.path), "wb").write(r.content)
 
 
-def download_ftp_creds(url, usr, pword):
+def download_ftp_creds(url, usr, pword, localpath):
     """Handles FTP (insecure) downloads with user/password. Should actually NOT be used except with anonymous username and password."""
     a = urlparse(url)
     ftp = FTP(a.netloc)  # connect to host, default port
@@ -51,7 +51,7 @@ def download_ftp_creds(url, usr, pword):
     ftp.quit()
 
 
-def download_ftps_creds(url, usr, pword):
+def download_ftps_creds(url, usr, pword, localpath):
     """Handles FTPS downloads with user/password credentials."""
     a = urlparse(url)
     ftps = FTP_TLS(a.netloc)  # connect to host, default port
@@ -62,12 +62,12 @@ def download_ftps_creds(url, usr, pword):
     ftps.quit()
 
 
-def download_sftp(url, usr, pword):
+def download_sftp(url, usr, pword, localpath):
     """Handles SFTP downloads with credentials. Uses fabric."""
     a = urlparse(url)
     print(a)
     c = Connection(
-        a.netloc, port=22, user=usr, connect_kwargs={"password": pword}
+            a.netloc, port=22, user=usr, connect_kwargs={"password": pword}
     )
     print(c)
     c.get(os.path.basename(a.path))
@@ -132,6 +132,7 @@ parse_arguments()  # parse arguments. Only one for now: d for download list
 with open(args.downloadpath) as f:
     downloadlist = yaml.load(f, Loader=yaml.FullLoader)
 
+# This should probably move into a function to avoid shadowing
 for location in downloadlist["downloads"]:
     method = downloadlist["downloads"][location]["method"]
     url = downloadlist["downloads"][location]["url"]
@@ -142,14 +143,13 @@ for location in downloadlist["downloads"]:
     print(downloadlist["downloads"][location])
     # TODO: should be replaced with Python 3.10+ match statement instead
     if method == "http" or method == "https":
-        download_http(method + "://" + url + path)
+        download_http(method + "://" + url + path, localpath=dest)
     elif method == "ftp":
-        download_ftp_creds(method + "://" + url + path, usr=user, pword=password)
+        download_ftp_creds(method + "://" + url + path, usr=user, pword=password, localpath=dest)
     elif method == "ftps":
-        download_ftps_creds(method + "://" + url + path, usr=user, pword=password)
+        download_ftps_creds(method + "://" + url + path, usr=user, pword=password, localpath=dest)
     elif method == "sftp":
-        download_sftp(method + "://" + url + path, usr=user, pword=password)
-
+        download_sftp(method + "://" + url + path, usr=user, pword=password, localpath=dest)
 
 load_credentials(downloadlist["credentials"])
 
