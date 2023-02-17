@@ -34,19 +34,24 @@ def parse_arguments():
 
 
 def download_http(url, localpath):
-    """Handles HTTP and HTTPS downloads."""
+    """Handles HTTP and HTTPS downloads.
+    Allow following redirects for simplicity."""
     r = requests.get(url, allow_redirects=True)
     a = urlparse(url)
-    open(os.path.basename(a.path), "wb").write(r.content)
+    #    open(os.path.basename(a.path), "wb").write(r.content)
+    print(localpath + os.path.basename(a.path))
+    # TODO: use open with for closing connection
+    open(localpath + os.path.basename(a.path), "wb").write(r.content)
 
 
 def download_ftp_creds(url, usr, pword, localpath):
-    """Handles FTP (insecure) downloads with user/password. Should actually NOT be used except with anonymous username and password."""
+    """Handles FTP (insecure) downloads with user/password.
+    Should NOT be used except with 'anonymous' as username and password."""
     a = urlparse(url)
     ftp = FTP(a.netloc)  # connect to host, default port
     ftp.login(user=usr, passwd=pword)
     ftp.cwd(os.path.dirname(a.path))  # change into the specified directory
-    with open(os.path.basename(a.path), "wb") as fp:
+    with open(localpath + os.path.basename(a.path), "wb") as fp:
         ftp.retrbinary("RETR %s" % os.path.basename(a.path), fp.write)
     ftp.quit()
 
@@ -57,7 +62,7 @@ def download_ftps_creds(url, usr, pword, localpath):
     ftps = FTP_TLS(a.netloc)  # connect to host, default port
     ftps.login(user=usr, passwd=pword)
     ftps.cwd(os.path.dirname(a.path))  # change into the specified directory
-    with open(os.path.basename(a.path), "wb") as fp:
+    with open(localpath + os.path.basename(a.path), "wb") as fp:
         ftps.retrbinary("RETR %s" % os.path.basename(a.path), fp.write)
     ftps.quit()
 
@@ -67,10 +72,11 @@ def download_sftp(url, usr, pword, localpath):
     a = urlparse(url)
     print(a)
     c = Connection(
-            a.netloc, port=22, user=usr, connect_kwargs={"password": pword}
+        a.netloc, port=22, user=usr, connect_kwargs={"password": pword}
     )
     print(c)
     c.get(os.path.basename(a.path))
+    # TODO: set local path for getting
 
 
 def load_credentials(credsfile):
@@ -151,7 +157,7 @@ for location in downloadlist["downloads"]:
     elif method == "sftp":
         download_sftp(method + "://" + url + path, usr=user, pword=password, localpath=dest)
 
-load_credentials(downloadlist["credentials"])
+# load_credentials(downloadlist["credentials"])
 
 print(
     datetime.fromtimestamp(datetime.now().timestamp()), " Ending remoteget " + version
