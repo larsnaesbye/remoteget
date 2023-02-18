@@ -132,6 +132,5 @@ dmypy.json
 .DS_Store
 
 # don't track the non-example files
-credentials.yaml
 downloadlist.yaml
 
