@@ -11,7 +11,6 @@ from urllib.parse import urlparse
 
 import requests
 import yaml
-from fabric import Connection
 
 # Constants and globals
 version = "0.9"
@@ -36,36 +35,24 @@ def parse_arguments() -> None:
 def download_http(url, localpath) -> None:
     """Handles HTTP and HTTPS downloads without credentials.
     Allow following redirects for simplicity."""
-    r = requests.get(url.netloc+url.path, allow_redirects=True)
+    r = requests.get(url.netloc + url.path, allow_redirects=True)
     print(localpath + os.path.basename(url.path))
     # TODO: use open with for closing connection
     open(localpath + os.path.basename(url.path), "wb").write(r.content)
 
 
-def download_ftp(url, usr, pword, localpath) -> None:
-    """Handles FTP (insecure) and FTPS downloads with user/password.
+def download_ftp(url, localpath) -> None:
+    """Handles FTP (insecure) and FTPS downloads.
     FTP should NOT be used except with 'anonymous' as username and password."""
     if url.scheme == 'ftps':
         ftp = FTP_TLS(url.netloc)  # connect to host, default port
     else:
         ftp = FTP(url.netloc)
-    ftp.login(user=usr, passwd=pword)
+    ftp.login()  # user and pass is anonymous
     ftp.cwd(os.path.dirname(url.path))  # change into the specified directory
     with open(localpath + os.path.basename(url.path), "wb") as fp:
         ftp.retrbinary("RETR %s" % os.path.basename(url.path), fp.write)
     ftp.quit()
-
-
-def download_sftp(url, usr, pword, localpath) -> None:
-    """Handles SFTP downloads with credentials. Uses fabric."""
-    a = urlparse(url)
-    print(a)
-    c = Connection(
-        a.netloc, port=22, user=usr, connect_kwargs={"password": pword}
-    )
-    print(c)
-    c.get(os.path.basename(a.path))
-    # TODO: set local path for getting
 
 
 def calc_gps_week() -> int:
@@ -121,20 +108,15 @@ parse_arguments()  # parse arguments. Only one for now: d for download list
 with open(args.downloadpath) as f:
     downloadlist = yaml.load(f, Loader=yaml.FullLoader)
 
-# This should probably move into a separate function to avoid variable shadowing
 for location in downloadlist["downloads"]:
     parsedurl = urlparse(downloadlist["downloads"][location]["url"])
-    user = downloadlist["downloads"][location]["user"]
-    password = downloadlist["downloads"][location]["pass"]
     dest = downloadlist["downloads"][location]["dest"]
 
     match parsedurl.scheme:
         case 'http' | 'https':
             download_http(parsedurl, localpath=dest)
         case 'ftp' | 'ftps':
-            download_ftp(parsedurl, usr=user, pword=password, localpath=dest)
-        case 'sftp':
-            download_sftp(parsedurl, usr=user, pword=password, localpath=dest)
+            download_ftp(parsedurl, localpath=dest)
 
 print(
     datetime.fromtimestamp(datetime.now().timestamp()), " Ending remoteget " + version
