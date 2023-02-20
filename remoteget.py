@@ -15,7 +15,6 @@ import yaml
 # Constants and globals
 version = "0.9"
 args = None
-creds = None
 downloadlist = None
 
 
@@ -37,7 +36,7 @@ def download_http(url, localpath) -> None:
     Allow following redirects for simplicity."""
     r = requests.get(url.netloc + url.path, allow_redirects=True)
     print(localpath + os.path.basename(url.path))
-    # TODO: use open with for closing connection
+    # TODO: use with open for auto-closing connection
     open(localpath + os.path.basename(url.path), "wb").write(r.content)
 
 
@@ -50,6 +49,7 @@ def download_ftp(url, localpath) -> None:
         ftp = FTP(url.netloc)
     ftp.login()  # user and pass is anonymous
     ftp.cwd(os.path.dirname(url.path))  # change into the specified directory
+    print(localpath + os.path.basename(url.path))
     with open(localpath + os.path.basename(url.path), "wb") as fp:
         ftp.retrbinary("RETR %s" % os.path.basename(url.path), fp.write)
     ftp.quit()
@@ -109,9 +109,10 @@ with open(args.downloadpath) as f:
     downloadlist = yaml.load(f, Loader=yaml.FullLoader)
 
 for location in downloadlist["downloads"]:
-    parsedurl = urlparse(downloadlist["downloads"][location]["url"])
-    dest = downloadlist["downloads"][location]["dest"]
-
+    print(location)
+    parsedurl = urlparse(resolve_macros(downloadlist["downloads"][location]["url"]))
+    dest = resolve_macros(downloadlist["downloads"][location]["dest"])
+    print(parsedurl)
     match parsedurl.scheme:
         case 'http' | 'https':
             download_http(parsedurl, localpath=dest)
