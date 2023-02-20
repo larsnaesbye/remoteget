@@ -36,25 +36,23 @@ def parse_arguments() -> None:
 def download_http(url, localpath) -> None:
     """Handles HTTP and HTTPS downloads without credentials.
     Allow following redirects for simplicity."""
-    r = requests.get(url, allow_redirects=True)
-    a = urlparse(url)
-    print(localpath + os.path.basename(a.path))
+    r = requests.get(url.netloc+url.path, allow_redirects=True)
+    print(localpath + os.path.basename(url.path))
     # TODO: use open with for closing connection
-    open(localpath + os.path.basename(a.path), "wb").write(r.content)
+    open(localpath + os.path.basename(url.path), "wb").write(r.content)
 
 
 def download_ftp(url, usr, pword, localpath) -> None:
     """Handles FTP (insecure) and FTPS downloads with user/password.
     FTP should NOT be used except with 'anonymous' as username and password."""
-    a = urlparse(url)
-    if a.scheme == 'ftps':
-        ftp = FTP_TLS(a.netloc)  # connect to host, default port
+    if url.scheme == 'ftps':
+        ftp = FTP_TLS(url.netloc)  # connect to host, default port
     else:
-        ftp = FTP(a.netloc)  # connect to host, default port
+        ftp = FTP(url.netloc)
     ftp.login(user=usr, passwd=pword)
-    ftp.cwd(os.path.dirname(a.path))  # change into the specified directory
-    with open(localpath + os.path.basename(a.path), "wb") as fp:
-        ftp.retrbinary("RETR %s" % os.path.basename(a.path), fp.write)
+    ftp.cwd(os.path.dirname(url.path))  # change into the specified directory
+    with open(localpath + os.path.basename(url.path), "wb") as fp:
+        ftp.retrbinary("RETR %s" % os.path.basename(url.path), fp.write)
     ftp.quit()
 
 
@@ -125,20 +123,18 @@ with open(args.downloadpath) as f:
 
 # This should probably move into a separate function to avoid variable shadowing
 for location in downloadlist["downloads"]:
-    method = downloadlist["downloads"][location]["method"]
-    url = downloadlist["downloads"][location]["url"]
-    path = downloadlist["downloads"][location]["path"]
+    parsedurl = urlparse(downloadlist["downloads"][location]["url"])
     user = downloadlist["downloads"][location]["user"]
     password = downloadlist["downloads"][location]["pass"]
     dest = downloadlist["downloads"][location]["dest"]
 
-    match method:
+    match parsedurl.scheme:
         case 'http' | 'https':
-            download_http(method + "://" + url + path, localpath=dest)
+            download_http(parsedurl, localpath=dest)
         case 'ftp' | 'ftps':
-            download_ftp(method + "://" + url + path, usr=user, pword=password, localpath=dest)
+            download_ftp(parsedurl, usr=user, pword=password, localpath=dest)
         case 'sftp':
-            download_sftp(method + "://" + url + path, usr=user, pword=password, localpath=dest)
+            download_sftp(parsedurl, usr=user, pword=password, localpath=dest)
 
 print(
     datetime.fromtimestamp(datetime.now().timestamp()), " Ending remoteget " + version
