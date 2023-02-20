@@ -20,7 +20,7 @@ creds = None
 downloadlist = None
 
 
-def parse_arguments():
+def parse_arguments() -> None:
     global args
     parser = argparse.ArgumentParser("remoteget")
     parser.add_argument(
@@ -33,22 +33,24 @@ def parse_arguments():
     args = parser.parse_args()
 
 
-def download_http(url, localpath):
+def download_http(url, localpath) -> None:
     """Handles HTTP and HTTPS downloads without credentials.
     Allow following redirects for simplicity."""
     r = requests.get(url, allow_redirects=True)
     a = urlparse(url)
-    #    open(os.path.basename(a.path), "wb").write(r.content)
     print(localpath + os.path.basename(a.path))
     # TODO: use open with for closing connection
     open(localpath + os.path.basename(a.path), "wb").write(r.content)
 
 
-def download_ftp_creds(url, usr, pword, localpath):
-    """Handles FTP (insecure) downloads with user/password.
-    Should NOT be used except with 'anonymous' as username and password."""
+def download_ftp(url, usr, pword, localpath) -> None:
+    """Handles FTP (insecure) and FTPS downloads with user/password.
+    FTP should NOT be used except with 'anonymous' as username and password."""
     a = urlparse(url)
-    ftp = FTP(a.netloc)  # connect to host, default port
+    if a.scheme == 'ftps':
+        ftp = FTP_TLS(a.netloc)  # connect to host, default port
+    else:
+        ftp = FTP(a.netloc)  # connect to host, default port
     ftp.login(user=usr, passwd=pword)
     ftp.cwd(os.path.dirname(a.path))  # change into the specified directory
     with open(localpath + os.path.basename(a.path), "wb") as fp:
@@ -56,18 +58,7 @@ def download_ftp_creds(url, usr, pword, localpath):
     ftp.quit()
 
 
-def download_ftps_creds(url, usr, pword, localpath):
-    """Handles FTPS downloads with user/password credentials."""
-    a = urlparse(url)
-    ftps = FTP_TLS(a.netloc)  # connect to host, default port
-    ftps.login(user=usr, passwd=pword)
-    ftps.cwd(os.path.dirname(a.path))  # change into the specified directory
-    with open(localpath + os.path.basename(a.path), "wb") as fp:
-        ftps.retrbinary("RETR %s" % os.path.basename(a.path), fp.write)
-    ftps.quit()
-
-
-def download_sftp(url, usr, pword, localpath):
+def download_sftp(url, usr, pword, localpath) -> None:
     """Handles SFTP downloads with credentials. Uses fabric."""
     a = urlparse(url)
     print(a)
@@ -79,7 +70,7 @@ def download_sftp(url, usr, pword, localpath):
     # TODO: set local path for getting
 
 
-def calc_gps_week():
+def calc_gps_week() -> int:
     gps_epoch = date(1980, 1, 6)  # GPS week 0
     today = date.today()
     epoch_monday = gps_epoch - timedelta(gps_epoch.weekday())
@@ -87,25 +78,25 @@ def calc_gps_week():
     return int((today_monday - epoch_monday).days / 7)
 
 
-def calc_year_yyyy():
+def calc_year_yyyy() -> str:
     today = datetime.today()
     return today.strftime("%Y")
 
 
-def calc_year_yy():
+def calc_year_yy() -> str:
     today = datetime.today()
     return today.strftime("%y")
 
 
-def calc_doy():
+def calc_doy() -> int:
     return datetime.now().timetuple().tm_yday
 
 
 # Some useful macros
 macros = {
     "$DOY$": str(calc_doy()),
-    "$YYYY$": str(calc_year_yyyy()),
-    "$YY$": str(calc_year_yy()),
+    "$YYYY$": calc_year_yyyy(),
+    "$YY$": calc_year_yy(),
     "$GPSWEEK$": str(calc_gps_week()),
 }
 # Add the system environment variables to our macro collection
@@ -113,7 +104,7 @@ for name, value in os.environ.items():
     macros["$" + name + "$"] = value
 
 
-def resolve_macros(macrostring):
+def resolve_macros(macrostring: str) -> str:
     """Replaces macros with their calculated values."""
     resultstring = macrostring
     for key in macros.keys():
@@ -142,14 +133,10 @@ for location in downloadlist["downloads"]:
     dest = downloadlist["downloads"][location]["dest"]
 
     match method:
-        case 'http':
+        case 'http' | 'https':
             download_http(method + "://" + url + path, localpath=dest)
-        case 'https':
-            download_http(method + "://" + url + path, localpath=dest)
-        case 'ftp':
-            download_ftp_creds(method + "://" + url + path, usr=user, pword=password, localpath=dest)
-        case 'ftps':
-            download_ftps_creds(method + "://" + url + path, usr=user, pword=password, localpath=dest)
+        case 'ftp' | 'ftps':
+            download_ftp(method + "://" + url + path, usr=user, pword=password, localpath=dest)
         case 'sftp':
             download_sftp(method + "://" + url + path, usr=user, pword=password, localpath=dest)
 
