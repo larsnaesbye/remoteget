@@ -34,7 +34,7 @@ def parse_arguments():
 
 
 def download_http(url, localpath):
-    """Handles HTTP and HTTPS downloads.
+    """Handles HTTP and HTTPS downloads without credentials.
     Allow following redirects for simplicity."""
     r = requests.get(url, allow_redirects=True)
     a = urlparse(url)
@@ -77,6 +77,7 @@ def download_sftp(url, usr, pword, localpath):
     print(c)
     c.get(os.path.basename(a.path))
     # TODO: set local path for getting
+
 
 def calc_gps_week():
     gps_epoch = date(1980, 1, 6)  # GPS week 0
@@ -131,7 +132,7 @@ parse_arguments()  # parse arguments. Only one for now: d for download list
 with open(args.downloadpath) as f:
     downloadlist = yaml.load(f, Loader=yaml.FullLoader)
 
-# This should probably move into a function to avoid shadowing
+# This should probably move into a separate function to avoid variable shadowing
 for location in downloadlist["downloads"]:
     method = downloadlist["downloads"][location]["method"]
     url = downloadlist["downloads"][location]["url"]
@@ -139,16 +140,18 @@ for location in downloadlist["downloads"]:
     user = downloadlist["downloads"][location]["user"]
     password = downloadlist["downloads"][location]["pass"]
     dest = downloadlist["downloads"][location]["dest"]
-    print(downloadlist["downloads"][location])
-    # TODO: should be replaced with Python 3.10+ match statement instead
-    if method == "http" or method == "https":
-        download_http(method + "://" + url + path, localpath=dest)
-    elif method == "ftp":
-        download_ftp_creds(method + "://" + url + path, usr=user, pword=password, localpath=dest)
-    elif method == "ftps":
-        download_ftps_creds(method + "://" + url + path, usr=user, pword=password, localpath=dest)
-    elif method == "sftp":
-        download_sftp(method + "://" + url + path, usr=user, pword=password, localpath=dest)
+
+    match method:
+        case 'http':
+            download_http(method + "://" + url + path, localpath=dest)
+        case 'https':
+            download_http(method + "://" + url + path, localpath=dest)
+        case 'ftp':
+            download_ftp_creds(method + "://" + url + path, usr=user, pword=password, localpath=dest)
+        case 'ftps':
+            download_ftps_creds(method + "://" + url + path, usr=user, pword=password, localpath=dest)
+        case 'sftp':
+            download_sftp(method + "://" + url + path, usr=user, pword=password, localpath=dest)
 
 print(
     datetime.fromtimestamp(datetime.now().timestamp()), " Ending remoteget " + version
