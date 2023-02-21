@@ -4,11 +4,11 @@
 # Lars Næsbye Christensen, 2023
 
 import argparse
-import os
+from pathlib import Path
 from datetime import date, timedelta, datetime
 from ftplib import FTP, FTP_TLS
 from urllib.parse import urlparse
-
+from os import environ
 import requests
 import yaml
 
@@ -31,35 +31,31 @@ def parse_arguments() -> None:
     args = parser.parse_args()
 
 
-def download_http(url, localpath) -> None:
+def download_http(domain: str, remotepath: Path, localpath: Path) -> None:
     """Handles HTTP and HTTPS downloads without credentials.
     Allow following redirects for simplicity."""
-    r = requests.get(url.netloc + url.path, allow_redirects=True)
-    print(localpath + os.path.basename(url.path))
-    # TODO: use with open for auto-closing connection
-    open(localpath + os.path.basename(url.path), "wb").write(r.content)
+    r = requests.get(domain + remotepath.as_uri(), allow_redirects=True)
+    with open(localpath / remotepath.name, "wb") as file:
+        file.write(r.content)
 
 
-def download_ftp(url, localpath) -> None:
-    """Handles FTP (insecure) and FTPS downloads.
-    FTP should NOT be used except with 'anonymous' as username and password."""
-    if url.scheme == 'ftps':
-        ftp = FTP_TLS(url.netloc)  # connect to host, default port
+def download_ftp(scheme: str, domain: str, remotepath: Path, localpath: Path) -> None:
+    """Handles FTP (insecure) and FTPS downloads using anonymous user."""
+    if scheme == "ftps":
+        ftp = FTP_TLS(domain)  # connect to host, default port
     else:
-        ftp = FTP(url.netloc)
+        ftp = FTP(domain)
     ftp.login()  # user and pass is anonymous
-    ftp.cwd(os.path.dirname(url.path))  # change into the specified directory
-    print(localpath + os.path.basename(url.path))
-    with open(localpath + os.path.basename(url.path), "wb") as fp:
-        ftp.retrbinary("RETR %s" % os.path.basename(url.path), fp.write)
+    ftp.cwd(str(remotepath.parent))  # change into the path's parent
+    with open(localpath, "wb") as fp:
+        ftp.retrbinary("RETR %s" % remotepath.name, fp.write)
     ftp.quit()
 
 
-def calc_gps_week() -> int:
+def calc_gps_week(tocalc: date) -> int:
     gps_epoch = date(1980, 1, 6)  # GPS week 0
-    today = date.today()
     epoch_monday = gps_epoch - timedelta(gps_epoch.weekday())
-    today_monday = today - timedelta(today.weekday())
+    today_monday = tocalc - timedelta(tocalc.weekday())
     return int((today_monday - epoch_monday).days / 7)
 
 
@@ -82,10 +78,10 @@ macros = {
     "$DOY$": str(calc_doy()),
     "$YYYY$": calc_year_yyyy(),
     "$YY$": calc_year_yy(),
-    "$GPSWEEK$": str(calc_gps_week()),
+    "$GPSWEEK$": str(calc_gps_week(date.today())),
 }
 # Add the system environment variables to our macro collection
-for name, value in os.environ.items():
+for name, value in environ.items():
     macros["$" + name + "$"] = value
 
 
@@ -101,7 +97,6 @@ def resolve_macros(macrostring: str) -> str:
 print(
     datetime.fromtimestamp(datetime.now().timestamp()), " Starting remoteget " + version
 )
-
 parse_arguments()  # parse arguments. Only one for now: d for download list
 
 # Using the download list argument, we load the YAML file specifying files to download and how
@@ -109,15 +104,13 @@ with open(args.downloadpath) as f:
     downloadlist = yaml.load(f, Loader=yaml.FullLoader)
 
 for location in downloadlist["downloads"]:
-    print(location)
     parsedurl = urlparse(resolve_macros(downloadlist["downloads"][location]["url"]))
-    dest = resolve_macros(downloadlist["downloads"][location]["dest"])
-    print(parsedurl)
+    dest = Path(resolve_macros(downloadlist["downloads"][location]["dest"]))
     match parsedurl.scheme:
         case 'http' | 'https':
-            download_http(parsedurl, localpath=dest)
+            download_http(parsedurl.netloc, Path(parsedurl.path), localpath=dest)
         case 'ftp' | 'ftps':
-            download_ftp(parsedurl, localpath=dest)
+            download_ftp(parsedurl.scheme, parsedurl.netloc, Path(parsedurl.path), localpath=dest)
 
 print(
     datetime.fromtimestamp(datetime.now().timestamp()), " Ending remoteget " + version
