@@ -1,6 +1,6 @@
 # remoteget
 
-__remoteget__ downloads a series of files using different protocols - http, https, ftp, ftps, sftp.
+__remoteget__ downloads a series of files using different protocols - http, https, ftp, ftps, (sftp not yet).
 
 Developed for @SDFIdk to collect GNSS-related data, but may be useful for others who want to download parameterized file collections from heterogenous sources.
 
